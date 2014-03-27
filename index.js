@@ -10,10 +10,9 @@ var args = process.argv.slice(1)
 fs.readdir('/job', function (err, jobs) {
     var jobSpecs = jobs.map(function (j) {
         var interval = parseInt(fs.readFileSync("/job/" + j + "/interval").toString())
-        var timeout = 2000
         return {
             name: j,
-            interval: interval
+            interval: interval * 1000
         }
     })
 
@@ -22,10 +21,11 @@ fs.readdir('/job', function (err, jobs) {
 
 
 function runJob(job) {
-    var timeout = job.interval * 1000
+    var timeout = job.interval
     var timedExec = withTimeout(exec, timeout)
     timedExec("/job/" + job.name + "/run", function (err, stdout, stderr) {
-        //console.log("exec", job.name, err, stdout)
+        stdout && process.stdout.write(stdout)
+        stderr && process.stderr.write(stderr)
         setTimeout(runJob.bind(null, job), job.interval)
     })
 }
